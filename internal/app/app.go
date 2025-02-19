@@ -18,20 +18,20 @@ type App struct {
 }
 
 type Config struct {
-	DbIp    string `env:"MONOGO_DB_IP"`
-	DbPort  string `env:"MONGIO_DB_PORT"`
-	DbName  string `env:"MONGO_DB_NAME"`
-	DbUser  string `env:"MONGO_USER"`
-	DbPass  string `env:"MONGO_PASSWORD"`
-	AppPort string `env:"APP_PORT"`
-	AppHost string `env:"APP_HOST"`
+	MONGO_URI         string `env:"MONGO_URI"`
+	DbName            string `env:"MONGO_DB"`
+	DbUser            string `env:"MONGO_USER"`
+	DbPass            string `env:"MONGO_PASSWORD"`
+	AppPort           string `env:"APP_PORT"`
+	AppHost           string `env:"APP_HOST"`
+	ERPLY_API_KEY     string `env:"ERPLY_API_KEY"`
+	ERPLY_CLIENT_CODE string `env:"APP_HOST"`
 }
 
 func CreateApp(config *Config) *App {
 	logger := logger.NewSlogLogger()
 	db := mongodb.ConnectDB(mongodb.ConnectionConfig{
-		Host:   config.DbIp,
-		Port:   config.DbPort,
+		URI:    config.MONGO_URI,
 		DbName: config.DbName,
 		User:   config.DbUser,
 		Pass:   config.DbPass,

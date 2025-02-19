@@ -2,24 +2,24 @@ package main
 
 import (
 	"erply_test/internal/app"
+	"fmt"
 	"log"
-	"os"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	// Load environment variables
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using default environment variables")
+	if err := godotenv.Load(".env"); err != nil {
+		log.Println("No .env file found z, using system environment variables")
 	}
-	app := app.CreateApp(&app.Config{
-		DbIp:    os.Getenv("DATABASE_IP"),
-		DbPort:  os.Getenv("DATABASE_PORT"),
-		DbName:  os.Getenv("DATABASE_NAME"),
-		DbUser:  os.Getenv("DATABASE_USER"),
-		DbPass:  os.Getenv("DATABASE_PASS"),
-		AppPort: os.Getenv("APP_PORT"),
-	})
-	app.Run()
+
+	cfg := app.Config{}
+
+	if err := env.Parse(&cfg); err != nil {
+		fmt.Printf("%+v\n", err)
+		return
+	}
+	application := app.CreateApp(&cfg)
+	application.Run()
 }
