@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	hapi "erply_test/internal/api"
 	mongodb "erply_test/internal/database"
 	"erply_test/internal/logger"
 	"fmt"
@@ -19,6 +20,7 @@ type App struct {
 	db          *mongo.Database
 	ctx         context.Context
 	erplyClient *api.Client
+	handler     *hapi.APIHandler
 }
 
 type Config struct {
@@ -59,19 +61,22 @@ func CreateApp(config *Config) *App {
 		logger.Info("Database connected", err)
 	}
 
+	var router = gin.Default()
+
 	return &App{
 		config:      config,
-		router:      gin.Default(),
+		router:      router,
 		db:          db,
 		logger:      logger,
 		erplyClient: cli,
+		handler:     hapi.NewHandler(router, logger),
 	}
 }
 
 func (app *App) Run() {
 	defer app.Shutdown()
 	app.router.GET("/", getHome)
-	app.router.GET("/health", getHealth)
+	app.router.GET("/health", app.handler.GetHealth)
 	app.logger.Info("App Running")
 	app.logger.Info(app.config.AppHost + ":" + app.config.AppPort)
 	app.router.Run(app.config.AppHost + ":" + app.config.AppPort)
