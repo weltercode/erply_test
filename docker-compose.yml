@@ -12,7 +12,7 @@ services:
     depends_on:
       - mongo
     volumes:
-      - .env:/app/.env
+      - .env.docker:/app/.env
 
     # volumes:
     #   - .:/app
