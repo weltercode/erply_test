@@ -1,7 +1,13 @@
-package repositories
+package cache
 
-type TaskCacheInterface interface {
-	Set(key string, value any)
-	Get(key string) (any, error)
-	Delete(key string) error
+import (
+	"context"
+	"time"
+)
+
+type CacheInterface interface {
+	Get(ctx context.Context, key string) (string, error)
+	Set(ctx context.Context, key string, value string, expiration time.Duration) error
+	Delete(ctx context.Context, keys ...string) error
+	Close() error
 }

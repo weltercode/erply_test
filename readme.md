@@ -48,6 +48,17 @@ Run main.go
 go run cmd/main.go
 ```
 
+From command line
+try to check that api is ready
+```sh
+curl -i http://127.0.0.1:3000/health
+```
+
+try to use API 
+```
+curl -i -H "X-API-KEY: YOUR_API_KEY_FROM_ENV" http://127.0.0.1:3000/api/customers
+```
+
 ## Test
 ```sh
 go test ./test

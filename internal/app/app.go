@@ -5,8 +5,8 @@ import (
 	hapi "erply_test/internal/api"
 	"erply_test/internal/logger"
 	"erply_test/internal/middleware"
+	cache "erply_test/internal/repository"
 	"fmt"
-	"net/http"
 
 	"github.com/erply/api-go-wrapper/pkg/api"
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,7 @@ type App struct {
 	config      *Config
 	router      *gin.Engine
 	logger      logger.LoggerInterface
-	cache       *redis.Client
+	cache       cache.CacheInterface
 	ctx         context.Context
 	erplyClient *api.Client
 	handler     *hapi.APIHandler
@@ -42,16 +42,15 @@ func CreateApp(config *Config) *App {
 		Addr: config.RedisAddr,
 	})
 
+	cache := cache.NewRedisCache(redisClient)
+
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		panic(fmt.Sprintf("Failed to connect to Redis: %v", err))
 	} else {
 		logger.Info("Connected to Redis!", nil)
 	}
 
-	var z = map[string]string{}
-
 	cli, err := api.NewClientFromCredentials(config.ERPLY_USER_NAME, config.ERPLY_USER_PASS, config.ERPLY_CLIENT_CODE, nil)
-	cli.CustomerManager.SaveCustomer(ctx, z)
 	if err != nil {
 		panic(err)
 	}
@@ -61,10 +60,10 @@ func CreateApp(config *Config) *App {
 	return &App{
 		config:      config,
 		router:      router,
-		cache:       redisClient,
+		cache:       cache,
 		logger:      logger,
 		erplyClient: cli,
-		handler:     hapi.NewHandler(router, logger),
+		handler:     hapi.NewHandler(router, logger, cli, cache),
 	}
 }
 
@@ -78,19 +77,7 @@ func (app *App) Run() {
 	protected := app.router.Group("/api")
 	protected.Use(middleware.APIKeyAuthMiddleware(app.config.ApiKey))
 	{
-		protected.GET("/customers", func(c *gin.Context) {
-			val, err := app.cache.Get(app.ctx, "customers").Result()
-			if err == redis.Nil {
-				val = "not found in redis"
-			} else if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
-			c.JSON(http.StatusOK, gin.H{
-				"msg":         "You have access to protected customers endpoint",
-				"redis_value": val,
-			})
-		})
+		protected.GET("/customers", app.handler.GetCustomers)
 	}
 	app.logger.Info("App Running")
 	app.logger.Info(app.config.AppHost + ":" + app.config.AppPort)
