@@ -5,6 +5,7 @@ import (
 	"erply_test/internal/logger"
 	cache "erply_test/internal/repository"
 	"net/http"
+	"time"
 
 	"context"
 
@@ -40,30 +41,37 @@ func (h *APIHandler) GetHealth(c *gin.Context) {
 }
 
 func (h *APIHandler) GetCustomers(c *gin.Context) {
+	ctx := c.Request.Context()
 
-	val, err := h.cache.Get(h.ctx, "customers")
+	val, err := h.cache.Get(ctx, "customers")
 	if err != nil {
-		h.logger.Error("error get from cache", err)
+		h.logger.Error("error getting from cache", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	if val == "" {
-		customers, err := h.erplyClient.CustomerManager.GetCustomers(h.ctx, map[string]string{})
+		customers, err := h.erplyClient.CustomerManager.GetCustomers(ctx, map[string]string{})
 		if err != nil {
 			h.logger.Error("error fetching customers", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
 		customersJSON, err := json.Marshal(customers)
 		if err != nil {
 			h.logger.Error("error marshalling customers", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		h.cache.Set(h.ctx, "customers", string(customersJSON), 0)
-		val = string(customersJSON)
 
+		if err := h.cache.Set(ctx, "customers", string(customersJSON), 10*time.Minute); err != nil {
+			h.logger.Error("error caching customers", err)
+		}
+
+		val = string(customersJSON)
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"customers": val,
 	})
