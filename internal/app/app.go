@@ -10,6 +10,8 @@ import (
 
 	_ "erply_test/docs"
 
+	"github.com/gin-contrib/cors"
+
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -61,6 +63,13 @@ func CreateApp(config *Config) *App {
 	}
 
 	var router = gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "X-API-KEY"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	return &App{
 		config:      config,

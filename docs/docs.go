@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/api/customers": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get customers from Erply, possibly from cache. Allows query params like \"pageNo\" and \"recordsOnPage\".",
                 "consumes": [
                     "application/json"
@@ -62,6 +67,11 @@ const docTemplate = `{
         },
         "/api/customers/delete": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete one or more customers by their IDs",
                 "consumes": [
                     "application/json"
@@ -111,6 +121,11 @@ const docTemplate = `{
         },
         "/api/customers/save": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create or update customers in Erply",
                 "consumes": [
                     "application/json"
@@ -226,17 +241,24 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-API-KEY",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "127.0.0.1:3000 if you run it locally, or :8080 if you run it in Docker",
-	BasePath:         "/api/",
+	Host:             "127.0.0.1:3000",
+	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Erply customers API test wrapper",
-	Description:      "This is an API for managing Erply customers. It allows you to fetch customers, save them, and delete them. It use https://github.com/erply/api-go-wrapper/ to interact with Erply API.",
+	Description:      "This is an API for managing Erply customers. It allows you to fetch customers, save them, and delete them.\\n It use https://github.com/erply/api-go-wrapper/ to interact with Erply API. \\n 127.0.0.1:3000 if you run it locally, or :8080 if you run it in Docker",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

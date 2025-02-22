@@ -1,16 +1,21 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is an API for managing Erply customers. It allows you to fetch customers, save them, and delete them. It use https://github.com/erply/api-go-wrapper/ to interact with Erply API.",
+        "description": "This is an API for managing Erply customers. It allows you to fetch customers, save them, and delete them.\\n It use https://github.com/erply/api-go-wrapper/ to interact with Erply API. \\n 127.0.0.1:3000 if you run it locally, or :8080 if you run it in Docker",
         "title": "Erply customers API test wrapper",
         "contact": {},
         "version": "1.0"
     },
-    "host": "127.0.0.1:3000 if you run it locally, or :8080 if you run it in Docker",
-    "basePath": "/api/",
+    "host": "127.0.0.1:3000",
+    "basePath": "/",
     "paths": {
         "/api/customers": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get customers from Erply, possibly from cache. Allows query params like \"pageNo\" and \"recordsOnPage\".",
                 "consumes": [
                     "application/json"
@@ -56,6 +61,11 @@
         },
         "/api/customers/delete": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete one or more customers by their IDs",
                 "consumes": [
                     "application/json"
@@ -105,6 +115,11 @@
         },
         "/api/customers/save": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create or update customers in Erply",
                 "consumes": [
                     "application/json"
@@ -219,6 +234,13 @@
                     }
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-API-KEY",
+            "in": "header"
         }
     }
 }

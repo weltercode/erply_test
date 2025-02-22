@@ -1,4 +1,4 @@
-basePath: /api/
+basePath: /
 definitions:
   api.DeleteRequest:
     properties:
@@ -29,12 +29,13 @@ definitions:
           $ref: '#/definitions/api.SaveCustomer'
         type: array
     type: object
-host: 127.0.0.1:3000 if you run it locally, or :8080 if you run it in Docker
+host: 127.0.0.1:3000
 info:
   contact: {}
   description: This is an API for managing Erply customers. It allows you to fetch
-    customers, save them, and delete them. It use https://github.com/erply/api-go-wrapper/
-    to interact with Erply API.
+    customers, save them, and delete them.\n It use https://github.com/erply/api-go-wrapper/
+    to interact with Erply API. \n 127.0.0.1:3000 if you run it locally, or :8080
+    if you run it in Docker
   title: Erply customers API test wrapper
   version: "1.0"
 paths:
@@ -66,6 +67,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - ApiKeyAuth: []
       summary: Fetch Customers
       tags:
       - customers
@@ -99,6 +102,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - ApiKeyAuth: []
       summary: Delete Customers
       tags:
       - customers
@@ -132,6 +137,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - ApiKeyAuth: []
       summary: Save Customers
       tags:
       - customers
@@ -149,4 +156,9 @@ paths:
       summary: Returns health status
       tags:
       - health
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-KEY
+    type: apiKey
 swagger: "2.0"

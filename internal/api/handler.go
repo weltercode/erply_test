@@ -81,6 +81,7 @@ func (h *APIHandler) GetHealth(c *gin.Context) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     500 {object} map[string]interface{}
 // @Router      /api/customers [get]
+// @Security    ApiKeyAuth
 func (h *APIHandler) GetCustomers(c *gin.Context) {
 	ctx, cli := h.init(30)
 
@@ -145,6 +146,7 @@ func (h *APIHandler) GetCustomers(c *gin.Context) {
 // @Failure     400 {object} map[string]interface{}
 // @Failure     500 {object} map[string]interface{}
 // @Router      /api/customers/delete [delete]
+// @Security    ApiKeyAuth
 func (h *APIHandler) DeleteCustomers(c *gin.Context) {
 	ctx, cli := h.init(10)
 
@@ -189,6 +191,7 @@ func (h *APIHandler) DeleteCustomers(c *gin.Context) {
 // @Failure     400 {object} map[string]interface{}
 // @Failure     500 {object} map[string]interface{}
 // @Router      /api/customers/save [post]
+// @Security    ApiKeyAuth
 func (h *APIHandler) SaveCustomers(c *gin.Context) {
 	ctx, cli := h.init(30)
 
