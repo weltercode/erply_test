@@ -1,0 +1,152 @@
+basePath: /api/
+definitions:
+  api.DeleteRequest:
+    properties:
+      customerIDs:
+        items:
+          type: integer
+        type: array
+    type: object
+  api.SaveCustomer:
+    properties:
+      companyName:
+        type: string
+      customerID:
+        type: integer
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
+  api.SaveRequest:
+    properties:
+      customers:
+        items:
+          $ref: '#/definitions/api.SaveCustomer'
+        type: array
+    type: object
+host: 127.0.0.1:3000 if you run it locally, or :8080 if you run it in Docker
+info:
+  contact: {}
+  description: This is an API for managing Erply customers. It allows you to fetch
+    customers, save them, and delete them. It use https://github.com/erply/api-go-wrapper/
+    to interact with Erply API.
+  title: Erply customers API test wrapper
+  version: "1.0"
+paths:
+  /api/customers:
+    get:
+      consumes:
+      - application/json
+      description: Get customers from Erply, possibly from cache. Allows query params
+        like "pageNo" and "recordsOnPage".
+      parameters:
+      - description: Page number
+        in: query
+        name: pageNo
+        type: integer
+      - description: Records per page
+        in: query
+        name: recordsOnPage
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Fetch Customers
+      tags:
+      - customers
+  /api/customers/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete one or more customers by their IDs
+      parameters:
+      - description: Delete request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete Customers
+      tags:
+      - customers
+  /api/customers/save:
+    post:
+      consumes:
+      - application/json
+      description: Create or update customers in Erply
+      parameters:
+      - description: Customers to save
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.SaveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Save Customers
+      tags:
+      - customers
+  /health:
+    get:
+      description: Simple healthcheck endpoint
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Returns health status
+      tags:
+      - health
+swagger: "2.0"

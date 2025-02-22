@@ -35,7 +35,7 @@ docker compose build --no-cache
 docker compose up
 ```
 Server will be at APP_HOST:APP_PORT from .env
-Default: ```localhost:3000```
+Default: ```127.0.0.1:8080```
 
 ### For development
 Run docker to use redis
@@ -55,11 +55,30 @@ curl -i http://127.0.0.1:3000/health
 ```
 
 try to use API 
+```sh
+curl -X DELETE \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_API_KEY_FROM_ENV" \
+  -d '{
+    "customerIDs": [13380, 13381, 13382]
+  }' \
+  "http://localhost:3000/api/customers/delete"
 ```
-curl -i -H "X-API-KEY: YOUR_API_KEY_FROM_ENV" http://127.0.0.1:3000/api/customers
+```sh
+curl -X GET -H "X-API-KEY: YOUR_API_KEY_FROM_ENV" http://127.0.0.1:3000/api/customers?pageNo=1&recordsOnPage=50
+```
+
+From prohect root (NB! Test json data file located in /json dir ```@json/customers_save.json```)
+```sh
+curl -X POST -H "Content-Type: application/json" -H "x-api-key: YOUR_API_KEY_FROM_ENV" -d @json/customers_save.json "http://127.0.0.1:3000/api/customers/save"
 ```
 
 ## Test
 ```sh
 go test ./test
+```
+
+## Swagger Docs
+```sh
+swag init -g cmd/main.go  
 ```

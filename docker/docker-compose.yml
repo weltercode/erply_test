@@ -6,7 +6,7 @@ services:
     env_file:
       - .env
     ports:
-      - ${APP_PORT}:8080
+      - ${APP_PORT}:${APP_PORT}
     environment:
       - ERPLY_USER_PASS=${ERPLY_USER_PASS}
       - ERPLY_USER_NAME=${ERPLY_USER_NAME}

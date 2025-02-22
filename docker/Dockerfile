@@ -9,6 +9,9 @@ COPY . ./
 COPY .env .env
 
 RUN go build -o /app/main ./cmd/main.go
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
+RUN swag init -g ./cmd/main.go  
 
 FROM alpine:latest
 WORKDIR /app

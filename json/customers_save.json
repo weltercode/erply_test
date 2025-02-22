@@ -1,0 +1,16 @@
+{
+    "customers": [
+      {
+        "firstName": "Anna",
+        "lastName": "Pretty",
+        "email": "anna@example.com"
+      },
+      {
+        "customerID": 100,
+        "companyName": "Oruel Inc",
+        "address": "1234 Main St",
+        "phone": "+1-555-1234"
+      }
+    ]
+  }
+  

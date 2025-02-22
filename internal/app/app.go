@@ -8,6 +8,11 @@ import (
 	cache "erply_test/internal/repository"
 	"fmt"
 
+	_ "erply_test/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
 	"github.com/erply/api-go-wrapper/pkg/api"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -72,12 +77,15 @@ func (app *App) Run() {
 
 	// ==========  Public routes  ==========
 	app.router.GET("/health", app.handler.GetHealth)
+	app.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// ==========  Protected routes  ==========
 	protected := app.router.Group("/api")
 	protected.Use(middleware.APIKeyAuthMiddleware(app.config.ApiKey))
 	{
 		protected.GET("/customers", app.handler.GetCustomers)
+		protected.DELETE("/customers/delete", app.handler.DeleteCustomers)
+		protected.POST("/customers/save", app.handler.SaveCustomers)
 	}
 	app.logger.Info("App Running")
 	app.logger.Info(app.config.AppHost + ":" + app.config.AppPort)
