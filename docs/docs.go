@@ -201,9 +201,7 @@ const docTemplate = `{
             "properties": {
                 "customerIDs": {
                     "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "items": {}
                 }
             }
         },
@@ -261,6 +259,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "This is an API for managing Erply customers. It allows you to fetch customers, save them, and delete them.\\n It use https://github.com/erply/api-go-wrapper/ to interact with Erply API. \\n 127.0.0.1:3000 if you run it locally, or :8080 if you run it in Docker",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

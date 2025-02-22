@@ -195,9 +195,7 @@
             "properties": {
                 "customerIDs": {
                     "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "items": {}
                 }
             }
         },

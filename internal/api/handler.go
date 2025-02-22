@@ -7,26 +7,21 @@ import (
 	cache "erply_test/internal/repository"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/erply/api-go-wrapper/pkg/api"
 	"github.com/erply/api-go-wrapper/pkg/api/customers"
 	"github.com/gin-gonic/gin"
 )
 
-// --- Structures for request payload ---
-
-// Request payload for deleting multiple customers by IDs
 type DeleteRequest struct {
-	CustomerIDs []int `json:"customerIDs"`
+	CustomerIDs []interface{} `json:"customerIDs"`
 }
 
-// Request payload for saving multiple customers
 type SaveRequest struct {
 	Customers []SaveCustomer `json:"customers"`
 }
 
-// A single customer to be saved
 type SaveCustomer struct {
 	CustomerID  *int   `json:"customerID,omitempty"`
 	FirstName   string `json:"firstName,omitempty"`
@@ -34,28 +29,26 @@ type SaveCustomer struct {
 	CompanyName string `json:"companyName,omitempty"`
 	Email       string `json:"email,omitempty"`
 	Phone       string `json:"phone,omitempty"`
-	// Add whatever fields you need that Erply supports
 }
 
 type APIHandler struct {
-	router      *gin.Engine
-	logger      logger.LoggerInterface
-	ctx         context.Context
-	erplyClient *api.Client
-	cache       cache.CacheInterface
+	router          *gin.Engine
+	logger          logger.LoggerInterface
+	customerManager customers.Manager
+	cache           cache.CacheInterface
 }
 
 func NewHandler(
 	router *gin.Engine,
 	logger logger.LoggerInterface,
-	erplyClient *api.Client,
+	customerManager customers.Manager,
 	cache cache.CacheInterface,
 ) *APIHandler {
 	return &APIHandler{
-		router:      router,
-		logger:      logger,
-		erplyClient: erplyClient,
-		cache:       cache,
+		router:          router,
+		logger:          logger,
+		customerManager: customerManager,
+		cache:           cache,
 	}
 }
 
@@ -83,7 +76,7 @@ func (h *APIHandler) GetHealth(c *gin.Context) {
 // @Router      /api/customers [get]
 // @Security    ApiKeyAuth
 func (h *APIHandler) GetCustomers(c *gin.Context) {
-	ctx, cli := h.init(30)
+	ctx := h.init(30)
 
 	pageNoStr := c.Query("pageNo")
 	recordsOnPageStr := c.Query("recordsOnPage")
@@ -94,7 +87,8 @@ func (h *APIHandler) GetCustomers(c *gin.Context) {
 		recordsOnPageStr = "100"
 	}
 
-	cacheKey := "customers_" + pageNoStr + "_" + recordsOnPageStr
+	//cacheKey := "customers_" + pageNoStr + "_" + recordsOnPageStr
+	cacheKey := "customers"
 	val, err := h.cache.Get(ctx, cacheKey)
 	if err != nil {
 		h.logger.Error("error getting from cache", err)
@@ -110,7 +104,7 @@ func (h *APIHandler) GetCustomers(c *gin.Context) {
 				"pageNo":        pageNoStr,
 			},
 		}
-		customersResp, err := cli.GetCustomersBulk(ctx, bulkFilters, map[string]string{})
+		customersResp, err := h.customerManager.GetCustomersBulk(ctx, bulkFilters, map[string]string{})
 		if err != nil {
 			h.logger.Error("error fetching customers", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -148,7 +142,7 @@ func (h *APIHandler) GetCustomers(c *gin.Context) {
 // @Router      /api/customers/delete [delete]
 // @Security    ApiKeyAuth
 func (h *APIHandler) DeleteCustomers(c *gin.Context) {
-	ctx, cli := h.init(10)
+	ctx := h.init(10)
 
 	var req DeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -162,20 +156,40 @@ func (h *APIHandler) DeleteCustomers(c *gin.Context) {
 		return
 	}
 
-	// Build the slice required by DeleteCustomerBulk
 	var bulkReq []map[string]interface{}
 	for _, id := range req.CustomerIDs {
+		var idStr string
+		switch v := id.(type) {
+		case float64:
+			idStr = strconv.Itoa(int(v))
+		case string:
+			idStr = v
+		default:
+			h.logger.Error("invalid customer ID type", nil)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid customer ID type"})
+			return
+		}
+
+		h.logger.Info("Deleting customerID: " + idStr)
 		bulkReq = append(bulkReq, map[string]interface{}{
-			"customerID": strconv.Itoa(id),
+			"customerID": idStr,
 		})
 	}
 
-	deleteResp, err := cli.DeleteCustomerBulk(ctx, bulkReq, map[string]string{})
+	deleteResp, err := h.customerManager.DeleteCustomerBulk(ctx, bulkReq, map[string]string{})
 	if err != nil {
+		//`Invalid classifier ID, there is no such item. (Attribute "errorField" indicates the invalid input parameter.)`, from Erply-go-wrapper
+		if strings.Contains(err.Error(), "1011") {
+			h.logger.Warn("Customer already deleted or invalid ID")
+			c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Some customers were already deleted.", "response": deleteResp})
+			return
+		}
 		h.logger.Error("error deleting customers", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "customerIDs": req.CustomerIDs})
 		return
 	}
+	cacheKey := "customers"
+	h.cache.Delete(ctx, cacheKey)
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "response": deleteResp})
 }
@@ -193,7 +207,7 @@ func (h *APIHandler) DeleteCustomers(c *gin.Context) {
 // @Router      /api/customers/save [post]
 // @Security    ApiKeyAuth
 func (h *APIHandler) SaveCustomers(c *gin.Context) {
-	ctx, cli := h.init(30)
+	ctx := h.init(30)
 
 	var req SaveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -231,18 +245,20 @@ func (h *APIHandler) SaveCustomers(c *gin.Context) {
 		bulk = append(bulk, m)
 	}
 
-	resp, err := cli.SaveCustomerBulk(ctx, bulk, map[string]string{})
+	resp, err := h.customerManager.SaveCustomerBulk(ctx, bulk, map[string]string{})
 	if err != nil {
 		h.logger.Error("error saving customers", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	cacheKey := "customers"
+	h.cache.Delete(ctx, cacheKey)
+
 	c.JSON(http.StatusOK, resp)
 }
 
-func (h *APIHandler) init(ttl int16) (context.Context, customers.Manager) {
+func (h *APIHandler) init(ttl int16) context.Context {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*time.Duration(ttl))
-	cli := h.erplyClient.CustomerManager
-	return ctx, cli
+	return ctx
 }

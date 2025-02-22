@@ -57,7 +57,8 @@ func CreateApp(config *Config) *App {
 		logger.Info("Connected to Redis!", nil)
 	}
 
-	cli, err := api.NewClientFromCredentials(config.ERPLY_USER_NAME, config.ERPLY_USER_PASS, config.ERPLY_CLIENT_CODE, nil)
+	erplyClient, err := api.NewClientFromCredentials(config.ERPLY_USER_NAME, config.ERPLY_USER_PASS, config.ERPLY_CLIENT_CODE, nil)
+
 	if err != nil {
 		panic(err)
 	}
@@ -76,8 +77,8 @@ func CreateApp(config *Config) *App {
 		router:      router,
 		cache:       cache,
 		logger:      logger,
-		erplyClient: cli,
-		handler:     hapi.NewHandler(router, logger, cli, cache),
+		erplyClient: erplyClient,
+		handler:     hapi.NewHandler(router, logger, erplyClient.CustomerManager, cache),
 	}
 }
 

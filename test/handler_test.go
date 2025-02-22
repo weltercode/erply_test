@@ -11,7 +11,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/erply/api-go-wrapper/pkg/api"
 	sharedCommon "github.com/erply/api-go-wrapper/pkg/api/common"
 	"github.com/erply/api-go-wrapper/pkg/api/customers"
 	"github.com/gin-gonic/gin"
@@ -19,109 +18,97 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// ---------------------------------------
-// 1) Mock Customer Manager
-// ---------------------------------------
-
 type MockCustomerManager struct {
 	DeleteCustomerBulkFunc func(
 		ctx context.Context,
 		ids []map[string]interface{},
 		params map[string]string,
-	) (sharedCommon.DeleteResponseBulk, error)
+	) (customers.DeleteCustomersResponseBulk, error)
 }
 
 func (m *MockCustomerManager) DeleteCustomerBulk(
 	ctx context.Context,
 	ids []map[string]interface{},
 	params map[string]string,
-) (sharedCommon.DeleteResponseBulk, error) {
+) (customers.DeleteCustomersResponseBulk, error) {
+
 	if m.DeleteCustomerBulkFunc != nil {
 		return m.DeleteCustomerBulkFunc(ctx, ids, params)
 	}
-	// Default response if no custom func is provided
-	return sharedCommon.DeleteResponseBulk{
-		Status: sharedCommon.Status{
-			ResponseStatus:   "ok",
-			RecordsInRequest: len(ids),
-			RecordsDeleted:   len(ids),
+
+	statusBulk := sharedCommon.StatusBulk{}
+	statusBulk.ResponseStatus = "ok"
+	bulkResp := customers.DeleteCustomersResponseBulk{
+		Status: sharedCommon.Status{ResponseStatus: "ok"},
+		BulkItems: []customers.DeleteCustomerResponseBulkItem{
+			{
+				Status: statusBulk,
+			},
+			{
+				Status: statusBulk,
+			},
 		},
-		Results: []sharedCommon.DeleteResponse{
-			{DeletedID: 13380, ErrorCode: 0},
-			{DeletedID: 13381, ErrorCode: 0},
-		},
-	}, nil
+	}
+	return bulkResp, nil
 }
 
-// Required to satisfy the interface, no-op implementations
 func (m *MockCustomerManager) GetCustomers(ctx context.Context, filters map[string]string) (customers.GetCustomersResponse, error) {
 	return customers.GetCustomersResponse{}, nil
 }
 func (m *MockCustomerManager) GetCustomersBulk(ctx context.Context, bulkFilters []map[string]interface{}, baseFilters map[string]string) (customers.GetCustomersResponseBulk, error) {
 	return customers.GetCustomersResponseBulk{}, nil
 }
-func (m *MockCustomerManager) SaveCustomerBulk(ctx context.Context, req []map[string]interface{}, params map[string]string) (sharedCommon.MultiRequestResponse, error) {
-	return sharedCommon.MultiRequestResponse{}, nil
+func (m *MockCustomerManager) SaveCustomerBulk(ctx context.Context, req []map[string]interface{}, params map[string]string) (customers.SaveCustomerResponseBulk, error) {
+	return customers.SaveCustomerResponseBulk{}, nil
 }
-
-// ---------------------------------------
-// 2) Test for DeleteCustomers
-// ---------------------------------------
 
 func TestDeleteCustomers(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	// Setup a test recorder and context
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
-	// Initialize logger and Redis cache
 	testLogger := logger.NewSlogLogger()
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379", // Update as needed
+		Addr: "localhost:6379",
 	})
 	defer redisClient.Close()
 
-	// Flush Redis for clean state
 	if err := redisClient.FlushDB(context.Background()).Err(); err != nil {
 		t.Fatalf("Failed to flush redis: %v", err)
 	}
 
 	testCache := cache.NewRedisCache(redisClient)
 
-	// Mock DeleteCustomerBulk response
 	mockManager := &MockCustomerManager{
 		DeleteCustomerBulkFunc: func(
 			ctx context.Context,
 			ids []map[string]interface{},
 			params map[string]string,
-		) (sharedCommon.DeleteResponseBulk, error) {
-			return sharedCommon.DeleteResponseBulk{
-				Status: sharedCommon.Status{
-					ResponseStatus:   "ok",
-					RecordsInRequest: len(ids),
-					RecordsDeleted:   len(ids),
+		) (customers.DeleteCustomersResponseBulk, error) {
+			statusBulk := sharedCommon.StatusBulk{}
+			statusBulk.ResponseStatus = "ok"
+
+			bulkResp := customers.DeleteCustomersResponseBulk{
+				Status: sharedCommon.Status{ResponseStatus: "ok"},
+				BulkItems: []customers.DeleteCustomerResponseBulkItem{
+					{
+						Status: statusBulk,
+					},
+					{
+						Status: statusBulk,
+					},
 				},
-				Results: []sharedCommon.DeleteResponse{
-					{DeletedID: 13380, ErrorCode: 0},
-					{DeletedID: 13381, ErrorCode: 0},
-				},
-			}, nil
+			}
+			return bulkResp, nil
 		},
 	}
-
-	// Mock API client with the fake manager
-	mockErplyClient := &api.Client{
+	mockClient := &customers.Client{
 		CustomerManager: mockManager,
 	}
+	handler := api.NewHandler(r, testLogger, mockClient, testCache)
 
-	// Create handler with mock client
-	handler := api.NewHandler(r, testLogger, mockErplyClient, testCache)
-
-	// Register the route for testing
 	r.DELETE("/customers/delete", handler.DeleteCustomers)
-
-	// Prepare the request body
 	reqBody := map[string]interface{}{
 		"customerIDs": []int{13380, 13381},
 	}
@@ -130,21 +117,16 @@ func TestDeleteCustomers(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodDelete, "/customers/delete", bytes.NewBuffer(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
-	// Perform the request
 	c.Request = req
 	r.ServeHTTP(w, req)
 
-	// Assert the response
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err, "Response should be valid JSON")
 
-	// Check for expected response keys
 	assert.Equal(t, "ok", resp["status"], "Expected status 'ok'")
-
-	// Check records deleted count
 	response, ok := resp["response"].(map[string]interface{})
 	assert.True(t, ok, "Expected 'response' field in JSON")
 
