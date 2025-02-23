@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/erply/api-go-wrapper/pkg/api/customers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,14 +33,14 @@ type SaveCustomer struct {
 type APIHandler struct {
 	router          *gin.Engine
 	logger          logger.LoggerInterface
-	customerManager customers.Manager
+	customerManager CustomerManagerInterface
 	cache           cache.CacheInterface
 }
 
 func NewHandler(
 	router *gin.Engine,
 	logger logger.LoggerInterface,
-	customerManager customers.Manager,
+	customerManager CustomerManagerInterface,
 	cache cache.CacheInterface,
 ) *APIHandler {
 	return &APIHandler{
@@ -135,7 +134,7 @@ func (h *APIHandler) GetCustomers(c *gin.Context) {
 // @Tags        customers
 // @Accept      json
 // @Produce     json
-// @Param       request body DeleteRequest true "Delete request"
+// @Param       request body DeleteRequest true "Delete request" example({"customerIDs": ["4", "5", "6"]})
 // @Success     200 {object} map[string]interface{}
 // @Failure     400 {object} map[string]interface{}
 // @Failure     500 {object} map[string]interface{}
