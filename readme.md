@@ -75,7 +75,7 @@ curl -X POST -H "Content-Type: application/json" -H "x-api-key: YOUR_API_KEY_FRO
 
 ## Test
 ```sh
-go test ./test
+go test -v ./test
 ```
 
 ## Swagger Docs
