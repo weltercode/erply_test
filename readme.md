@@ -31,6 +31,7 @@ The are 3 version of .env files in project:
 ## Usage
 ### Production
 ```sh
+cd .\docker\
 docker compose build --no-cache
 docker compose up
 ```
@@ -40,6 +41,7 @@ Default: ```127.0.0.1:8080```
 ### For development
 Run docker to use redis
 ```sh
+cd .\docker\
 docker compose build --no-cache
 docker compose up
 ```
