@@ -64,12 +64,10 @@ func (h *APIHandler) GetHealth(c *gin.Context) {
 
 // GetCustomers godoc
 // @Summary     Fetch Customers
-// @Description Get customers from Erply, possibly from cache. Allows query params like "pageNo" and "recordsOnPage".
+// @Description Get customers from Erply. Get from cache, if no in cache then get from Erply Api.
 // @Tags        customers
 // @Accept      json
 // @Produce     json
-// @Param       pageNo        query int false "Page number"
-// @Param       recordsOnPage query int false "Records per page"
 // @Success     200 {object} map[string]interface{}
 // @Failure     500 {object} map[string]interface{}
 // @Router      /api/customers [get]
@@ -77,16 +75,6 @@ func (h *APIHandler) GetHealth(c *gin.Context) {
 func (h *APIHandler) GetCustomers(c *gin.Context) {
 	ctx := h.createTimeoutContext(c, 10*time.Second)
 
-	pageNoStr := c.Query("pageNo")
-	recordsOnPageStr := c.Query("recordsOnPage")
-	if pageNoStr == "" {
-		pageNoStr = "1"
-	}
-	if recordsOnPageStr == "" {
-		recordsOnPageStr = "100"
-	}
-
-	//cacheKey := "customers_" + pageNoStr + "_" + recordsOnPageStr
 	cacheKey := "customers"
 	val, err := h.cache.Get(ctx, cacheKey)
 	if err != nil {
@@ -99,8 +87,8 @@ func (h *APIHandler) GetCustomers(c *gin.Context) {
 		// If not found in cache, fetch from Erply
 		bulkFilters := []map[string]interface{}{
 			{
-				"recordsOnPage": recordsOnPageStr,
-				"pageNo":        pageNoStr,
+				// "recordsOnPage": recordsOnPageStr,
+				// "pageNo":        pageNoStr,
 			},
 		}
 		customersResp, err := h.customerManager.GetCustomersBulk(ctx, bulkFilters, map[string]string{})
@@ -130,18 +118,18 @@ func (h *APIHandler) GetCustomers(c *gin.Context) {
 
 // DeleteCustomers godoc
 // @Summary     Delete Customers
-// @Description Delete one or more customers by their IDs
+// @Description Delete one or more customers by their IDs  example({"customerIDs": ["4", "5", "6"]}
 // @Tags        customers
 // @Accept      json
 // @Produce     json
-// @Param       request body DeleteRequest true "Delete request" example({"customerIDs": ["4", "5", "6"]})
+// @Param       request body DeleteRequest true "Delete request")
 // @Success     200 {object} map[string]interface{}
 // @Failure     400 {object} map[string]interface{}
 // @Failure     500 {object} map[string]interface{}
 // @Router      /api/customers/delete [delete]
 // @Security    ApiKeyAuth
 func (h *APIHandler) DeleteCustomers(c *gin.Context) {
-	ctx := h.createTimeoutContext(c, 2*time.Second)
+	ctx := h.createTimeoutContext(c, 10*time.Second)
 
 	var req DeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -194,7 +182,7 @@ func (h *APIHandler) DeleteCustomers(c *gin.Context) {
 }
 
 // SaveCustomers godoc
-// @Summary     Save Customers
+// @Summary     Save Customers. Json example can be found in the project json folder
 // @Description Create or update customers in Erply
 // @Tags        customers
 // @Accept      json
@@ -258,7 +246,6 @@ func (h *APIHandler) SaveCustomers(c *gin.Context) {
 }
 
 func (h *APIHandler) createTimeoutContext(c *gin.Context, ttl time.Duration) context.Context {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), ttl)
-	defer cancel()
+	ctx, _ := context.WithTimeout(c.Request.Context(), ttl)
 	return ctx
 }

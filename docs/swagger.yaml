@@ -42,17 +42,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get customers from Erply, possibly from cache. Allows query params
-        like "pageNo" and "recordsOnPage".
-      parameters:
-      - description: Page number
-        in: query
-        name: pageNo
-        type: integer
-      - description: Records per page
-        in: query
-        name: recordsOnPage
-        type: integer
+      description: Get customers from Erply. Get from cache, if not exist then from
+        Erply Api.
       produces:
       - application/json
       responses:
@@ -75,7 +66,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete one or more customers by their IDs
+      description: 'Delete one or more customers by their IDs  example({"customerIDs":
+        ["4", "5", "6"]}'
       parameters:
       - description: Delete request
         in: body

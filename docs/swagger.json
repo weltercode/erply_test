@@ -16,7 +16,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get customers from Erply, possibly from cache. Allows query params like \"pageNo\" and \"recordsOnPage\".",
+                "description": "Get customers from Erply. Get from cache, if not exist then from Erply Api.",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,20 +27,6 @@
                     "customers"
                 ],
                 "summary": "Fetch Customers",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "pageNo",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Records per page",
-                        "name": "recordsOnPage",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -66,7 +52,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete one or more customers by their IDs",
+                "description": "Delete one or more customers by their IDs  example({\"customerIDs\": [\"4\", \"5\", \"6\"]}",
                 "consumes": [
                     "application/json"
                 ],

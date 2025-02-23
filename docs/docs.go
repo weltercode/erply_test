@@ -22,7 +22,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get customers from Erply, possibly from cache. Allows query params like \"pageNo\" and \"recordsOnPage\".",
+                "description": "Get customers from Erply. Get from cache, if not exist then from Erply Api.",
                 "consumes": [
                     "application/json"
                 ],
@@ -33,20 +33,6 @@ const docTemplate = `{
                     "customers"
                 ],
                 "summary": "Fetch Customers",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "pageNo",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Records per page",
-                        "name": "recordsOnPage",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -72,7 +58,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete one or more customers by their IDs",
+                "description": "Delete one or more customers by their IDs  example({\"customerIDs\": [\"4\", \"5\", \"6\"]}",
                 "consumes": [
                     "application/json"
                 ],
