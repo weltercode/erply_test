@@ -68,7 +68,7 @@ curl -X DELETE \
 curl -X GET -H "X-API-KEY: YOUR_API_KEY_FROM_ENV" http://127.0.0.1:3000/api/customers?pageNo=1&recordsOnPage=50
 ```
 
-From prohect root (NB! Test json data file located in /json dir ```@json/customers_save.json```)
+From project root (NB! Test json data file located in /json dir ```@json/customers_save.json```)
 ```sh
 curl -X POST -H "Content-Type: application/json" -H "x-api-key: YOUR_API_KEY_FROM_ENV" -d @json/customers_save.json "http://127.0.0.1:3000/api/customers/save"
 ```
