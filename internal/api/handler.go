@@ -75,7 +75,7 @@ func (h *APIHandler) GetHealth(c *gin.Context) {
 // @Router      /api/customers [get]
 // @Security    ApiKeyAuth
 func (h *APIHandler) GetCustomers(c *gin.Context) {
-	ctx := h.init(30)
+	ctx := h.createTimeoutContext(c, 10*time.Second)
 
 	pageNoStr := c.Query("pageNo")
 	recordsOnPageStr := c.Query("recordsOnPage")
@@ -141,7 +141,7 @@ func (h *APIHandler) GetCustomers(c *gin.Context) {
 // @Router      /api/customers/delete [delete]
 // @Security    ApiKeyAuth
 func (h *APIHandler) DeleteCustomers(c *gin.Context) {
-	ctx := h.init(10)
+	ctx := h.createTimeoutContext(c, 2*time.Second)
 
 	var req DeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -206,7 +206,7 @@ func (h *APIHandler) DeleteCustomers(c *gin.Context) {
 // @Router      /api/customers/save [post]
 // @Security    ApiKeyAuth
 func (h *APIHandler) SaveCustomers(c *gin.Context) {
-	ctx := h.init(30)
+	ctx := h.createTimeoutContext(c, 10*time.Second)
 
 	var req SaveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -257,7 +257,8 @@ func (h *APIHandler) SaveCustomers(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (h *APIHandler) init(ttl int16) context.Context {
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*time.Duration(ttl))
+func (h *APIHandler) createTimeoutContext(c *gin.Context, ttl time.Duration) context.Context {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), ttl)
+	defer cancel()
 	return ctx
 }

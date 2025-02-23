@@ -81,7 +81,7 @@ func TestSaveCustomers(t *testing.T) {
 	mockManager.On("SaveCustomerBulk", mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
 	mockCache.On("Delete", mock.Anything, mock.AnythingOfType("[]string")).Return(nil)
 
-	body := []byte(`{"customers": [{"firstName": "John", "lastName": "Doe"}]}`)
+	body := []byte(`{"customers": [{"firstName": "Anna", "lastName": "Taylor", "companyName": "Company 1", "email": "}]}`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/customers/save", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()

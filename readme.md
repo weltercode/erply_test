@@ -49,6 +49,7 @@ Run main.go
 ```sh
 go run cmd/main.go
 ```
+Default: ```127.0.0.1:3000```
 
 From command line
 try to check that api is ready
