@@ -65,7 +65,7 @@ func CreateApp(config *Config) *App {
 
 	var router = gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     []string{"http://127.0.0.1"},
 		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "X-API-KEY"},
 		ExposeHeaders:    []string{"Content-Length"},
